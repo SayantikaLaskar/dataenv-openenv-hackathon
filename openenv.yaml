@@ -1,95 +1,56 @@
-name: MedicalTriageEnv
+name: dataenv
 version: "1.0.0"
 description: >
-  A real-world emergency room triage environment where an AI agent acts as a
-  triage nurse, assessing patients using the Emergency Severity Index protocol.
-  The agent assigns an ESI level, disposition, and resource estimate.
-domain: medical_triage
+  A real-world data pipeline debugging environment where an AI agent acts
+  as a Data Engineer Co-pilot. The agent receives messy, broken datasets
+  and must identify and fix schema errors, missing values, duplicates, and
+  join key mismatches using structured actions with partial reward signals.
+
 tags:
-  - openenv
-  - medical
-  - triage
-  - emergency
-  - healthcare
+  - data-engineering
   - real-world
-  - safety-critical
+  - pipeline
+  - structured-actions
 
-observation_space:
-  type: object
-  schema: PatientObservation
-  fields:
-    patient_id: string
-    chief_complaint: string
-    symptom_duration_hours: float
-    pain_scale: integer
-    onset: string
-    systolic_bp: integer
-    diastolic_bp: integer
-    heart_rate: integer
-    respiratory_rate: integer
-    oxygen_saturation: float
-    temperature_celsius: float
-    glasgow_coma_scale: integer
-    age: integer
-    is_pregnant: boolean
-    allergies: list[string]
-    current_medications: list[string]
-    relevant_history: list[string]
-    primary_symptoms: list[string]
-    red_flag_symptoms: list[string]
-    arrival_mode: string
-    accompanied_by: string
-    step_number: integer
-    patients_seen: integer
-    task_id: string
-    ward_capacity_pct: float
-
-action_space:
-  type: object
-  schema: TriageAction
-  fields:
-    esi_level: enum[1, 2, 3, 4, 5]
-    disposition: enum[resuscitation_bay, immediate_room, treatment_room, fast_track, waiting_room]
-    estimated_resources: enum[0, 1, 2, 3, 4]
-    requires_immediate_physician: boolean
-    requires_monitoring: boolean
-    suspected_diagnosis: string
-
-reward_range: [0.0, 1.0]
-reward_description: >
-  Multi-dimensional partial-progress reward with strong penalties for dangerous
-  undertriage of high-acuity patients.
+author: "Team Hehe Something"
 
 tasks:
-  - id: task_1_critical_detection
-    name: "Critical Patient Detection"
+  - id: schema_fix
     difficulty: easy
-    max_steps: 15
-    success_threshold: 0.75
-    grader_metric: F-beta score for ESI-1 and ESI-2 detection
-  - id: task_2_full_esi_classification
-    name: "Full ESI Classification"
+    max_steps: 10
+    description: "Fix wrong column dtypes in an employee dataset"
+
+  - id: clean_pipeline
     difficulty: medium
-    max_steps: 20
-    success_threshold: 0.70
-    grader_metric: Weighted accuracy with asymmetric undertriage penalty
-  - id: task_3_boundary_cases
-    name: "Expert Triage: ESI Boundary Cases"
+    max_steps: 15
+    description: "Remove duplicates and handle missing values with correct strategies"
+
+  - id: join_repair
     difficulty: hard
-    max_steps: 25
-    success_threshold: 0.60
-    grader_metric: Mean reward with consistency penalty
+    max_steps: 20
+    description: "Normalize join keys, filter corrupted rows, resolve column clashes"
+
+action_space:
+  type: structured
+  model: DataAction
+
+observation_space:
+  type: structured
+  model: DataObservation
+
+reward_range: [0.0, 1.0]
+episode_termination:
+  - agent calls submit action
+  - max_steps reached
+  - catastrophic data loss (>50% rows dropped)
 
 endpoints:
-  - path: /reset
-    method: POST
-  - path: /step
-    method: POST
-  - path: /state
-    method: GET
-  - path: /tasks
-    method: GET
-  - path: /grader
-    method: POST
-  - path: /baseline
-    method: POST
+  reset: POST /reset
+  step: POST /step
+  state: GET /state
+  health: GET /health
+
+docker:
+  port: 7860
+  health_check: GET /health
+
