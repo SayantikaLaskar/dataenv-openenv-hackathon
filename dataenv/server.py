@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -72,9 +72,12 @@ def health() -> dict:
 
 
 @app.post("/reset")
-def reset() -> dict:
+def reset(task_id: str | None = Query(default=None)) -> dict:
     """Reset the active environment."""
 
+    global env
+    if task_id is not None:
+        env = DataEnv(task_id=task_id)
     return env.reset().model_dump()
 
 
