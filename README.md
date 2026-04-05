@@ -2,7 +2,7 @@
 title: DataEnv
 emoji: 🔧
 colorFrom: blue
-colorTo: teal
+colorTo: green
 sdk: docker
 app_port: 7860
 tags:
