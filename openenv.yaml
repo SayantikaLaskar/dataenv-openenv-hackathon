@@ -1,0 +1,56 @@
+name: dataenv
+version: "1.0.0"
+description: >
+  A real-world data pipeline debugging environment where an AI agent acts
+  as a Data Engineer Co-pilot. The agent receives messy, broken datasets
+  and must identify and fix schema errors, missing values, duplicates, and
+  join key mismatches using structured actions with partial reward signals.
+
+tags:
+  - data-engineering
+  - real-world
+  - pipeline
+  - structured-actions
+
+author: "Team Hehe Something"
+
+tasks:
+  - id: schema_fix
+    difficulty: easy
+    max_steps: 10
+    description: "Fix wrong column dtypes in an employee dataset"
+
+  - id: clean_pipeline
+    difficulty: medium
+    max_steps: 15
+    description: "Remove duplicates and handle missing values with correct strategies"
+
+  - id: join_repair
+    difficulty: hard
+    max_steps: 20
+    description: "Normalize join keys, filter corrupted rows, resolve column clashes"
+
+action_space:
+  type: structured
+  model: DataAction
+
+observation_space:
+  type: structured
+  model: DataObservation
+
+reward_range: [0.0, 1.0]
+episode_termination:
+  - agent calls submit action
+  - max_steps reached
+  - catastrophic data loss (>50% rows dropped)
+
+endpoints:
+  reset: POST /reset
+  step: POST /step
+  state: GET /state
+  health: GET /health
+
+docker:
+  port: 7860
+  health_check: GET /health
+
