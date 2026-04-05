@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from dataenv.env import DataEnv
 from dataenv.models import DataAction
@@ -29,6 +30,38 @@ def root() -> dict:
         "status": "running",
         "tasks": ["schema_fix", "clean_pipeline", "join_repair"],
     }
+
+
+@app.get("/web")
+def web() -> RedirectResponse:
+    """Compatibility route for Hugging Face web probes."""
+
+    return RedirectResponse(url="/", status_code=307)
+
+
+@app.get("/docs-ui", response_class=HTMLResponse)
+def docs_ui() -> str:
+    """Lightweight human-facing page for browser visits."""
+
+    return """
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>DataEnv</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.5; }
+          code { background: #f4f4f4; padding: 0.15rem 0.3rem; border-radius: 4px; }
+        </style>
+      </head>
+      <body>
+        <h1>DataEnv</h1>
+        <p>Data pipeline debugging environment for OpenEnv.</p>
+        <p>Available endpoints: <code>/health</code>, <code>/reset</code>, <code>/step</code>, <code>/state</code>, <code>/tasks</code>.</p>
+      </body>
+    </html>
+    """
 
 
 @app.get("/health")
