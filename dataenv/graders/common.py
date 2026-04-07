@@ -6,11 +6,19 @@ from typing import Dict, Iterable, List
 
 from dataenv.models import DataReward
 
+STRICT_SCORE_EPSILON = 1e-4
+
 
 def clamp(value: float) -> float:
     """Clamp a reward value to the OpenEnv range."""
 
     return max(0.0, min(1.0, float(value)))
+
+
+def clamp_strict(value: float) -> float:
+    """Clamp a task reward to the validator-safe open interval (0, 1)."""
+
+    return max(STRICT_SCORE_EPSILON, min(1.0 - STRICT_SCORE_EPSILON, float(value)))
 
 
 def reward_from_scores(
@@ -22,7 +30,7 @@ def reward_from_scores(
 ) -> DataReward:
     """Build a DataReward from partial scores."""
 
-    total = clamp(sum(partial_scores.values()))
+    total = clamp_strict(sum(partial_scores.values()))
     return DataReward(
         reward=total,
         partial_scores={key: round(clamp(value), 4) for key, value in partial_scores.items()},
@@ -44,4 +52,3 @@ def format_progress_feedback(improved: List[str], penalties: Iterable[str], fall
     if not parts:
         parts.append(fallback)
     return " ".join(parts)
-

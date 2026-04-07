@@ -6,7 +6,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-from dataenv.graders.common import clamp, format_progress_feedback
+from dataenv.graders.common import clamp, clamp_strict, format_progress_feedback
 from dataenv.models import DataAction, DataReward
 from dataenv.tasks import task_hard
 
@@ -44,7 +44,7 @@ def grade_join_repair(
             scores["join_success"] = 0.25
         elif match_rate > 0.50:
             scores["join_success"] = 0.10
-    total = clamp(sum(scores.values()))
+    total = clamp_strict(sum(scores.values()))
     return {
         "reward": total,
         "partial_scores": scores,
@@ -124,7 +124,7 @@ def compute_step_reward(
 
     feedback = format_progress_feedback(improved, penalties, "No new join repair issue resolved.")
     return DataReward(
-        reward=round(clamp(progress), 4),
+        reward=round(clamp_strict(progress), 4),
         partial_scores={key: round(value, 4) for key, value in current_scores.items()},
         feedback=feedback,
         done=False,
@@ -147,7 +147,7 @@ def compute_final_reward(data: Dict) -> DataReward:
     if episode_metrics.get("zero_data_loss", False):
         total += 0.05
         scores["zero_data_loss_bonus"] = 0.05
-    total = clamp(total)
+    total = clamp_strict(total)
     return DataReward(
         reward=round(total, 4),
         partial_scores={key: round(clamp(value), 4) for key, value in scores.items()},
