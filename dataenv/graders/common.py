@@ -7,6 +7,10 @@ from typing import Dict, Iterable, List
 from dataenv.models import DataReward
 
 STRICT_SCORE_EPSILON = 1e-4
+# Minimum and maximum values after rounding to 4 decimal places
+# These ensure scores are strictly between 0 and 1 (not 0.0 and not 1.0)
+MIN_SCORE = 0.0001
+MAX_SCORE = 0.9999
 
 
 def clamp(value: float) -> float:
@@ -18,13 +22,24 @@ def clamp(value: float) -> float:
 def clamp_strict(value: float) -> float:
     """Clamp a task reward to the validator-safe open interval (0, 1)."""
 
-    return max(STRICT_SCORE_EPSILON, min(1.0 - STRICT_SCORE_EPSILON, float(value)))
+    return max(MIN_SCORE, min(MAX_SCORE, float(value)))
 
 
 def export_score(value: float) -> float:
-    """Normalize any externally visible score into the open interval (0, 1)."""
+    """Normalize any externally visible score into the open interval (0, 1).
+    
+    Ensures the score is strictly between 0 and 1 after rounding to 4 decimal places.
+    This satisfies the validator requirement that scores must not be exactly 0.0 or 1.0.
+    """
 
-    return round(clamp_strict(value), 4)
+    clamped = clamp_strict(value)
+    rounded = round(clamped, 4)
+    # Double-check after rounding to ensure we never return exactly 0.0 or 1.0
+    if rounded <= 0.0:
+        return MIN_SCORE
+    if rounded >= 1.0:
+        return MAX_SCORE
+    return rounded
 
 
 def export_scores(scores: Dict[str, float]) -> Dict[str, float]:

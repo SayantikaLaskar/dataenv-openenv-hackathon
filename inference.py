@@ -166,7 +166,7 @@ def run_episode(task_id: str) -> Dict[str, Any]:
 
             rewards.append(step_reward)
             done_str = "true" if done else "false"
-            print(f"[STEP] step={step} action={action_str} reward={step_reward:.2f} done={done_str} error={error_val}")
+            print(f"[STEP] step={step} action={action_str} reward={step_reward:.4f} done={done_str} error={error_val}")
 
     except Exception as exc:
         rewards.append(0.0)
@@ -177,8 +177,8 @@ def run_episode(task_id: str) -> Dict[str, Any]:
         env.close()
 
     final_score = rewards[-1] if rewards else 0.0
-    rewards_str = ",".join(f"{reward:.2f}" for reward in rewards)
-    print(f"[END] success={'true' if success else 'false'} steps={step} score={final_score:.2f} rewards={rewards_str}")
+    rewards_str = ",".join(f"{reward:.4f}" for reward in rewards)
+    print(f"[END] success={'true' if success else 'false'} steps={step} score={final_score:.4f} rewards={rewards_str}")
     return {"task": task_id, "score": final_score, "success": success, "steps": step}
 
 
