@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from dataenv.data_generators import generate_easy, generate_hard, generate_medium
-from dataenv.graders.common import clamp_strict
+from dataenv.graders.common import export_score
 from dataenv.graders import grader_easy, grader_hard, grader_medium
 from dataenv.models import DataAction, DataObservation, DataReward, EpisodeState
 from dataenv.tasks import task_easy, task_hard, task_medium
@@ -46,7 +46,7 @@ class DataEnv:
         self.actions_taken: list[DataAction] = []
         self.issues_resolved = []
         self.issues_remaining = self.task.get_initial_issues(self.data)
-        self.cumulative_reward = 0.0
+        self.cumulative_reward = export_score(0.0)
         self.done = False
         self.data.setdefault("episode_metrics", {})["max_steps"] = self.max_steps
         self.data.setdefault("progress_cache", {})
@@ -80,12 +80,12 @@ class DataEnv:
             )
             self.issues_resolved = self.grader.get_resolved_issues(self.data)
             self.issues_remaining = [issue for issue in self.task.get_initial_issues(self.data) if issue not in self.issues_resolved]
-            self.cumulative_reward = clamp_strict(self.cumulative_reward + reward_obj.reward)
+            self.cumulative_reward = export_score(self.cumulative_reward + reward_obj.reward)
         except Exception as exc:
             error_msg = str(exc)
             logger.exception("Action failed for task=%s step=%s", self.task_id, self.current_step)
             reward_obj = DataReward(
-                reward=round(clamp_strict(0.0), 4),
+                reward=export_score(0.0),
                 partial_scores={},
                 feedback=f"Action failed: {error_msg}",
                 done=False,

@@ -6,7 +6,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-from dataenv.graders.common import clamp, clamp_strict, format_progress_feedback
+from dataenv.graders.common import export_score, export_scores, format_progress_feedback
 from dataenv.models import DataAction, DataReward
 from dataenv.tasks import task_medium
 
@@ -42,10 +42,10 @@ def grade_clean_pipeline(
         "timestamp_filled": 0.15 if current_df["timestamp"].isna().sum() == 0 else 0.0,
         "final_shape": 0.15 if abs(len(current_df) - expected_clean_rows) <= max(1, int(expected_clean_rows * 0.05)) else 0.0,
     }
-    total = clamp_strict(sum(scores.values()))
+    total = export_score(sum(scores.values()))
     return {
         "reward": total,
-        "partial_scores": scores,
+        "partial_scores": export_scores(scores),
         "feedback": "Standalone clean_pipeline grade computed.",
         "done": True,
         "success": total >= task_medium.SUCCESS_THRESHOLD,
@@ -121,8 +121,8 @@ def compute_step_reward(
 
     feedback = format_progress_feedback(improved, penalties, "No new cleaning issue resolved.")
     return DataReward(
-        reward=round(clamp_strict(progress), 4),
-        partial_scores={key: round(value, 4) for key, value in current_scores.items()},
+        reward=export_score(progress),
+        partial_scores=export_scores(current_scores),
         feedback=feedback,
         done=False,
         success=sum(current_scores.values()) >= task_medium.SUCCESS_THRESHOLD,
@@ -144,10 +144,10 @@ def compute_final_reward(data: Dict) -> DataReward:
     if episode_metrics.get("zero_data_loss", False):
         total += 0.05
         scores["zero_data_loss_bonus"] = 0.05
-    total = clamp_strict(total)
+    total = export_score(total)
     return DataReward(
-        reward=round(total, 4),
-        partial_scores={key: round(clamp(value), 4) for key, value in scores.items()},
+        reward=total,
+        partial_scores=export_scores(scores),
         feedback="Final clean_pipeline grading completed.",
         done=True,
         success=total >= task_medium.SUCCESS_THRESHOLD,
